@@ -1,0 +1,3 @@
+rootProject.name='Average Number'
+include ':app'
+include ':number'
