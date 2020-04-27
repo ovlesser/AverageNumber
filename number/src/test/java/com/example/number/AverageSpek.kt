@@ -15,10 +15,10 @@ class AverageSpek : Spek({
             mockk(){
                 every { applicationContext } returns mockk(){
                     every { getSharedPreferences(any(), any()) } returns mockk(){
-                        every { getStringSet(any(), any()) } returns setOf<String>("10.0", "20.0", "30.0") as MutableSet<String>
+                        every { getString(any(), any()) } returns "10.0,20.0,30.0"
                         every { edit() } returns mockk() {
                             every { clear() } returns mockk(){
-                                every { putStringSet(any(), any()) } returns mockk(){
+                                every { putString(any(), any()) } returns mockk(){
                                     every { apply() } just Runs
                                 }
                             }
@@ -29,7 +29,7 @@ class AverageSpek : Spek({
         }
         val mockContentApiService = mockk<ContentApiService>() {
             every { prestored() } returns mockk() {
-                every { enqueue(any()) } just io.mockk.Runs
+                every { enqueue(any()) } just Runs
             }
         }
         lateinit var average : Average
@@ -37,6 +37,9 @@ class AverageSpek : Spek({
         beforeGroup {
             mockkStatic(Log::class)
             every { Log.d( any(), any()) } returns 0
+
+            mockkObject(ContentApiService.Companion)
+            every { ContentApiService.create(any()) } returns mockContentApiService
         }
 
         afterGroup {
@@ -44,7 +47,9 @@ class AverageSpek : Spek({
         }
 
         beforeEachTest {
-            average = spyk(Average(mockContext, mockContentApiService))
+            average = spyk(Average(mockContext)) {
+
+            }
         }
 
         it("10, 20 and 30 should be added"){
@@ -58,7 +63,7 @@ class AverageSpek : Spek({
             assertThat(average.userNumbers).isEqualTo(listOf(10.0, 20.0, 30.0, 1.0, 2.0, 3.0))
         }
 
-        it("the average should be 2"){
+        it("the average should be 10.0"){
             average.prestoredNumbers.addAll(prestoredList)
             assertThat(average.getAverage()).isEqualTo((prestoredList + userList).average())
         }

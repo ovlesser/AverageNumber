@@ -8,10 +8,13 @@ import retrofit2.Callback
 import retrofit2.Response
 
 
-class Average(val context: Context, val contentApiService: ContentApiService = ContentApiService.create()) {
+class Average(private val context: Context) {
     private val TAG = Average::class.simpleName
     val prestoredNumbers = mutableListOf<Double>()
     val userNumbers = mutableListOf<Double>()
+    private val contentApiService by lazy {
+        ContentApiService.create()
+    }
 
     init {
         fetchPrestored()
@@ -38,20 +41,17 @@ class Average(val context: Context, val contentApiService: ContentApiService = C
     private fun fetchUserNumbers() {
         val pref: SharedPreferences = context.applicationContext
             .getSharedPreferences("MyPref", 0) // 0 - for private mode
-        var set: MutableSet<String> = HashSet()
-        set = pref.getStringSet("userNumbers", mutableSetOf()) as MutableSet<String>
-        set.map { userNumbers.add(it.toDouble()) }
+        val str = pref.getString("userNumbers", null)
+        str?.split(",")?.forEach { userNumbers.add(it.toDouble()) }
     }
 
     fun addNumber( number: Double) {
         userNumbers.add(number)
-        val set: MutableSet<String> = HashSet()
-        set.addAll(userNumbers.map { it.toString() })
         val pref: SharedPreferences = context.applicationContext
                 .getSharedPreferences("MyPref", 0) // 0 - for private mode
         pref.edit()
             .clear()
-            .putStringSet("userNumbers", set)
+            .putString("userNumbers", userNumbers.joinToString())
             .apply()
     }
 
